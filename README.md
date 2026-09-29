@@ -44,6 +44,16 @@ Each review session covers due cards (`next_review <= today`), capped at 20 per 
 
 The app ships with 8 sample words so the first run isn't empty. Click **添加单词** to add your own — duplicates (case-insensitive) are rejected. To start fresh, clear the site data for the page in your browser settings.
 
+## Replicate it in Muse
+
+If you use [Muse](https://muse.ai) (Meta's personal AI assistant), you can ask it to build you a private copy of this app — with cloud-stored progress, daily review reminders, and a pinnable sidebar card. Just send your Muse this prompt (Chinese is fine):
+
+```
+照着 https://github.com/Yisong-Qian/english-flashcards 这个开源抽认卡项目，给我做一个英语单词抽认卡应用：翻卡、"认识了"/"还不熟"、间隔重复（1→2→4→7→14→30→60 天，连续 3 次"认识了"毕业）、单词和例句发音、从聊天里直接加词、每天早上 9 点提醒我复习。
+```
+
+Muse will create a private fullstack app for you (your data stays yours); you can then Pin it to the sidebar from the Library.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
