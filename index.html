@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>英语单词抽认卡</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>英语单词抽认卡</h1>
+    <p id="stats" class="stats"></p>
+    <div class="header-actions">
+      <button id="start-review" type="button" class="primary">开始复习</button>
+      <button id="open-add" type="button">添加单词</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-deck" aria-label="牌堆">
+      <ul id="deck-list" class="deck-list"></ul>
+    </section>
+
+    <section id="view-review" hidden aria-label="复习">
+      <div id="review-main">
+        <p id="progress" class="progress"></p>
+        <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-label="抽认卡，轻触翻面">
+          <div class="flashcard-inner">
+            <div class="face front">
+              <div class="word" id="front-word"></div>
+              <div class="hint">轻触翻面</div>
+            </div>
+            <div class="face back">
+              <div class="word-sm" id="back-word"></div>
+              <div class="meta" id="back-meta"></div>
+              <div class="meaning" id="back-meaning"></div>
+              <div class="example" id="back-example"></div>
+              <div class="example-zh" id="back-example-zh"></div>
+              <button class="speak-btn" id="speak-btn" type="button">听发音</button>
+            </div>
+          </div>
+        </div>
+        <div class="answer-row">
+          <button id="btn-again" type="button" class="again">还不熟</button>
+          <button id="btn-known" type="button" class="known">认识了</button>
+        </div>
+      </div>
+      <div id="session-done" hidden></div>
+    </section>
+  </main>
+
+  <dialog id="add-dialog" aria-label="添加单词">
+    <form id="add-form" method="dialog">
+      <h2>添加单词</h2>
+      <label>单词 / 短语 *<input id="f-word" required maxlength="80" autocomplete="off" /></label>
+      <label>中文释义 *<input id="f-meaning" required maxlength="200" autocomplete="off" /></label>
+      <label>词性<input id="f-pos" maxlength="20" placeholder="如 n. / v. / adj." autocomplete="off" /></label>
+      <label>音标<input id="f-phonetic" maxlength="80" placeholder="如 /rɪˈzɪliənt/" autocomplete="off" /></label>
+      <label>英文例句<input id="f-example-en" maxlength="300" autocomplete="off" /></label>
+      <label>例句中文<input id="f-example-zh" maxlength="300" autocomplete="off" /></label>
+      <div class="dialog-actions">
+        <button type="button" id="add-cancel">取消</button>
+        <button type="submit" class="primary">加入牌堆</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
