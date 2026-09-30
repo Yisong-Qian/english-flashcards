@@ -13,6 +13,10 @@
     <div class="header-actions">
       <button id="start-review" type="button" class="primary">开始复习</button>
       <button id="open-add" type="button">添加单词</button>
+      <button id="open-bulk" type="button">批量添加</button>
+      <button id="export-deck" type="button">导出备份</button>
+      <button id="import-deck" type="button">导入</button>
+      <input id="import-file" type="file" accept="application/json,.json" hidden />
     </div>
   </header>
 
@@ -51,7 +55,7 @@
 
   <dialog id="add-dialog" aria-label="添加单词">
     <form id="add-form" method="dialog">
-      <h2>添加单词</h2>
+      <h2 id="add-title">添加单词</h2>
       <label>单词 / 短语 *<input id="f-word" required maxlength="80" autocomplete="off" /></label>
       <label>中文释义 *<input id="f-meaning" required maxlength="200" autocomplete="off" /></label>
       <label>词性<input id="f-pos" maxlength="20" placeholder="如 n. / v. / adj." autocomplete="off" /></label>
@@ -60,6 +64,18 @@
       <label>例句中文<input id="f-example-zh" maxlength="300" autocomplete="off" /></label>
       <div class="dialog-actions">
         <button type="button" id="add-cancel">取消</button>
+        <button type="submit" class="primary">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="bulk-dialog" aria-label="批量添加">
+    <form id="bulk-form" method="dialog">
+      <h2>批量添加</h2>
+      <p class="dim bulk-hint">每行一个单词，各字段用 <code>|</code> 分隔：<br />单词 | 中文释义 | 词性 | 音标 | 英文例句 | 例句中文<br />只写单词也行，释义可以后面再补。</p>
+      <textarea id="bulk-text" rows="8" placeholder="resilient | 有弹性的；能迅速恢复的&#10;serendipity | 意外发现珍宝的运气"></textarea>
+      <div class="dialog-actions">
+        <button type="button" id="bulk-cancel">取消</button>
         <button type="submit" class="primary">加入牌堆</button>
       </div>
     </form>

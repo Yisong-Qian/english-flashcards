@@ -79,6 +79,7 @@ button:disabled {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 /* ---------- deck list ---------- */
@@ -148,6 +149,23 @@ button:disabled {
   margin-top: 6px;
   font-size: 0.85rem;
   padding: 6px 12px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mini-btn {
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+
+.danger-text {
+  color: var(--danger);
+  border-color: var(--danger);
 }
 
 .empty {
@@ -295,6 +313,33 @@ dialog::backdrop {
   background: var(--bg);
   color: var(--text);
   width: 100%;
+}
+
+#bulk-form h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+#bulk-form textarea {
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  resize: vertical;
+}
+
+.bulk-hint {
+  font-size: 0.85rem;
+  margin: 0 0 10px;
+}
+
+.bulk-hint code {
+  background: var(--bg);
+  padding: 1px 6px;
+  border-radius: 6px;
 }
 
 .dialog-actions {

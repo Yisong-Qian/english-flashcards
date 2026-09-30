@@ -11,6 +11,10 @@ A tiny offline-first English vocabulary flashcard app. No backend, no build step
   - "still learning" resets the streak and brings the card back tomorrow
 - **Pronunciation** — per-card text-to-speech via the Web Speech API, no audio files needed
 - **Add your own words** — new cards enter the review queue the same day
+- **Bulk add** — paste multiple lines at once, fields separated by `|`:
+  `word | 释义 | 词性 | 音标 | 英文例句 | 例句中文` (word alone also works)
+- **Edit & delete** — expand any card in the deck list to fix a typo or remove it
+- **Import / export** — back up the deck as JSON, restore or merge it on another device (duplicates are skipped, review progress is preserved)
 - **Progress persistence** — deck and review state live in the browser's `localStorage`
 - **Dark mode** — follows the OS `prefers-color-scheme` setting
 
@@ -43,6 +47,14 @@ Each review session covers due cards (`next_review <= today`), capped at 20 per 
 ## Seeding your own deck
 
 The app ships with 8 sample words so the first run isn't empty. Click **添加单词** to add your own — duplicates (case-insensitive) are rejected. To start fresh, clear the site data for the page in your browser settings.
+
+## Backup & migration
+
+Click **导出备份** to download the whole deck (words + review progress) as a JSON file
+named `flashcards-backup-YYYY-MM-DD.json`. Click **导入** to restore it on another
+device or merge a shared deck — cards whose word already exists are skipped, and the
+import keeps each card's `known_streak`, `interval_days`, `next_review` and `status`,
+so review progress survives the move.
 
 ## Replicate it in Muse
 

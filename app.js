@@ -127,6 +127,10 @@ function saveDeck(deck) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(deck));
 }
 
+function nextId() {
+  return deck.length ? Math.max(...deck.map((c) => c.id)) + 1 : 1;
+}
+
 /* ---------- spaced repetition ---------- */
 function nextInterval(current) {
   const i = INTERVALS.indexOf(current);
@@ -171,6 +175,7 @@ function speak(text) {
 /* ---------- UI ---------- */
 let deck = loadDeck();
 let session = null; // { queue: [ids], idx, known, again, date }
+let editingId = null; // card id being edited, or null when adding
 
 const $ = (id) => document.getElementById(id);
 
@@ -216,6 +221,10 @@ function renderDeck() {
         <p class="detail-line">${esc(card.example_en || "")}</p>
         <p class="detail-line dim">${esc(card.example_zh || "")}</p>
         <button class="speak-btn" type="button">听发音</button>
+        <div class="row-actions">
+          <button class="mini-btn" type="button" data-act="edit">编辑</button>
+          <button class="mini-btn danger-text" type="button" data-act="delete">删除</button>
+        </div>
       </div>`;
     const main = li.querySelector(".row-main");
     const detail = li.querySelector(".row-detail");
@@ -227,6 +236,14 @@ function renderDeck() {
     li.querySelector(".speak-btn").addEventListener("click", (e) => {
       e.stopPropagation();
       speak(`${card.word}. ${card.example_en || ""}`);
+    });
+    li.querySelector('[data-act="edit"]').addEventListener("click", (e) => {
+      e.stopPropagation();
+      openAdd(card);
+    });
+    li.querySelector('[data-act="delete"]').addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteCard(card.id);
     });
     list.appendChild(li);
   }
@@ -303,9 +320,19 @@ function showDeck() {
   renderDeck();
 }
 
-/* ----- add word ----- */
-function openAdd() {
+/* ----- add / edit word ----- */
+function openAdd(card) {
   $("add-form").reset();
+  editingId = card ? card.id : null;
+  $("add-title").textContent = card ? "编辑单词" : "添加单词";
+  if (card) {
+    $("f-word").value = card.word;
+    $("f-meaning").value = card.meaning_zh || "";
+    $("f-pos").value = card.pos || "";
+    $("f-phonetic").value = card.phonetic || "";
+    $("f-example-en").value = card.example_en || "";
+    $("f-example-zh").value = card.example_zh || "";
+  }
   const dialog = $("add-dialog");
   if (typeof dialog.showModal === "function") dialog.showModal();
   else dialog.setAttribute("open", "");
@@ -315,38 +342,188 @@ function handleAdd(e) {
   e.preventDefault();
   const word = $("f-word").value.trim();
   if (!word) return;
-  const exists = deck.some((c) => c.word.toLowerCase() === word.toLowerCase());
-  if (exists) {
+  const dup = deck.some(
+    (c) => c.word.toLowerCase() === word.toLowerCase() && c.id !== editingId
+  );
+  if (dup) {
     alert("这个单词已经在牌堆里了。");
     return;
   }
-  const t = todayStr();
-  deck.push({
-    id: deck.length ? Math.max(...deck.map((c) => c.id)) + 1 : 1,
-    word,
-    pos: $("f-pos").value.trim(),
-    meaning_zh: $("f-meaning").value.trim(),
-    phonetic: $("f-phonetic").value.trim(),
-    example_en: $("f-example-en").value.trim(),
-    example_zh: $("f-example-zh").value.trim(),
-    added_at: t,
-    last_reviewed: null,
-    interval_days: 1,
-    next_review: t,
-    known_streak: 0,
-    status: "active",
-  });
+  if (editingId != null) {
+    const card = deck.find((c) => c.id === editingId);
+    if (card) {
+      card.word = word;
+      card.meaning_zh = $("f-meaning").value.trim();
+      card.pos = $("f-pos").value.trim();
+      card.phonetic = $("f-phonetic").value.trim();
+      card.example_en = $("f-example-en").value.trim();
+      card.example_zh = $("f-example-zh").value.trim();
+    }
+    editingId = null;
+  } else {
+    const t = todayStr();
+    deck.push({
+      id: nextId(),
+      word,
+      pos: $("f-pos").value.trim(),
+      meaning_zh: $("f-meaning").value.trim(),
+      phonetic: $("f-phonetic").value.trim(),
+      example_en: $("f-example-en").value.trim(),
+      example_zh: $("f-example-zh").value.trim(),
+      added_at: t,
+      last_reviewed: null,
+      interval_days: 1,
+      next_review: t,
+      known_streak: 0,
+      status: "active",
+    });
+  }
   saveDeck(deck);
   $("add-dialog").close();
   renderStats();
   renderDeck();
 }
 
+function deleteCard(id) {
+  const card = deck.find((c) => c.id === id);
+  if (!card) return;
+  if (!confirm(`确定删除「${card.word}」吗？它的复习记录会一起删掉。`)) return;
+  deck = deck.filter((c) => c.id !== id);
+  saveDeck(deck);
+  renderStats();
+  renderDeck();
+}
+
+/* ----- bulk add ----- */
+function openBulk() {
+  $("bulk-form").reset();
+  const dialog = $("bulk-dialog");
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+}
+
+function handleBulk(e) {
+  e.preventDefault();
+  const lines = $("bulk-text").value.split("\n");
+  const have = new Set(deck.map((c) => c.word.toLowerCase()));
+  const t = todayStr();
+  let nid = nextId();
+  let added = 0;
+  let skipped = 0;
+  for (const line of lines) {
+    const parts = line.split("|").map((s) => s.trim());
+    const word = parts[0] || "";
+    if (!word) continue; // blank line
+    if (have.has(word.toLowerCase())) {
+      skipped += 1;
+      continue;
+    }
+    have.add(word.toLowerCase());
+    deck.push({
+      id: nid++,
+      word,
+      meaning_zh: parts[1] || "",
+      pos: parts[2] || "",
+      phonetic: parts[3] || "",
+      example_en: parts[4] || "",
+      example_zh: parts[5] || "",
+      added_at: t,
+      last_reviewed: null,
+      interval_days: 1,
+      next_review: t,
+      known_streak: 0,
+      status: "active",
+    });
+    added += 1;
+  }
+  saveDeck(deck);
+  $("bulk-dialog").close();
+  renderStats();
+  renderDeck();
+  alert(`批量添加完成：新增 ${added} 张，跳过 ${skipped} 张（重复）。`);
+}
+
+/* ----- import / export ----- */
+function exportDeck() {
+  const blob = new Blob([JSON.stringify(deck, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `flashcards-backup-${todayStr()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function normalizeImportedCard(raw, t) {
+  if (!raw || typeof raw.word !== "string" || !raw.word.trim()) return null;
+  const pick = (v) => (typeof v === "string" ? v : "");
+  const dateOr = (v, fb) => (/^\d{4}-\d{2}-\d{2}$/.test(v) ? v : fb);
+  return {
+    id: 0, // assigned on import
+    word: raw.word.trim(),
+    pos: pick(raw.pos),
+    meaning_zh: pick(raw.meaning_zh),
+    phonetic: pick(raw.phonetic),
+    example_en: pick(raw.example_en),
+    example_zh: pick(raw.example_zh),
+    added_at: dateOr(raw.added_at, t),
+    last_reviewed: /^\d{4}-\d{2}-\d{2}$/.test(raw.last_reviewed) ? raw.last_reviewed : null,
+    interval_days: Number.isInteger(raw.interval_days) && raw.interval_days > 0 ? raw.interval_days : 1,
+    next_review: dateOr(raw.next_review, t),
+    known_streak: Number.isInteger(raw.known_streak) && raw.known_streak >= 0 ? raw.known_streak : 0,
+    status: raw.status === "graduated" ? "graduated" : "active",
+  };
+}
+
+function importDeck(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      const arr = Array.isArray(data) ? data : data.cards;
+      if (!Array.isArray(arr)) throw new Error("bad format");
+      const t = todayStr();
+      const have = new Set(deck.map((c) => c.word.toLowerCase()));
+      let nid = nextId();
+      let added = 0;
+      let skipped = 0;
+      for (const raw of arr) {
+        const card = normalizeImportedCard(raw, t);
+        if (!card || have.has(card.word.toLowerCase())) {
+          skipped += 1;
+          continue;
+        }
+        card.id = nid++;
+        have.add(card.word.toLowerCase());
+        deck.push(card);
+        added += 1;
+      }
+      saveDeck(deck);
+      renderStats();
+      renderDeck();
+      alert(`导入完成：新增 ${added} 张，跳过 ${skipped} 张（重复或格式不对）。`);
+    } catch (_) {
+      alert("导入失败：文件不是有效的牌堆 JSON。");
+    }
+  };
+  reader.readAsText(file);
+}
+
 /* ----- init ----- */
 $("start-review").addEventListener("click", startReview);
-$("open-add").addEventListener("click", openAdd);
+$("open-add").addEventListener("click", () => openAdd());
+$("open-bulk").addEventListener("click", openBulk);
 $("add-form").addEventListener("submit", handleAdd);
 $("add-cancel").addEventListener("click", () => $("add-dialog").close());
+$("bulk-form").addEventListener("submit", handleBulk);
+$("bulk-cancel").addEventListener("click", () => $("bulk-dialog").close());
+$("export-deck").addEventListener("click", exportDeck);
+$("import-deck").addEventListener("click", () => $("import-file").click());
+$("import-file").addEventListener("change", (e) => {
+  if (e.target.files[0]) importDeck(e.target.files[0]);
+  e.target.value = "";
+});
 $("flashcard").addEventListener("click", () => $("flashcard").classList.toggle("flipped"));
 $("flashcard").addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") {
